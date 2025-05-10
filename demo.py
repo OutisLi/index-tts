@@ -1,19 +1,20 @@
 import torch
+import platform
 
 from indextts.infer import IndexTTS
 
 if __name__ == "__main__":
-    prompt_wav = "tests/sample_prompt.wav"
+    prompt_wav = "tests/zero_shot_prompt.wav"
 
     # default settings
-    use_cuda = torch.cuda.is_available()
-    use_fp16 = use_cuda
+    use_fp16 = torch.cuda.is_available()
+    use_cuda_kernel = torch.cuda.is_available() and platform.system() == "Linux"
 
     tts = IndexTTS(
         cfg_path="checkpoints/config.yaml",
         model_dir="checkpoints",
         is_fp16=use_fp16,
-        use_cuda_kernel=use_cuda,
+        use_cuda_kernel=use_cuda_kernel,
     )
     # 长文本推理测试
     text = """《盗梦空间》是由美国华纳兄弟影片公司出品的电影，由克里斯托弗·诺兰执导并编剧，

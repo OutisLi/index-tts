@@ -23,11 +23,13 @@ sentencepiece
 librosa
 gradio
 tqdm
-deepspeed
+deepspeed; platform_system != "Windows"
 ruff
 modelscope
 
+wetext
+
 # torch-tensorrt; platform_system == "Linux"
 
-WeTextProcessing; platform_system != "Darwin"
-wetext; platform_system == "Darwin"
+# WeTextProcessing; platform_system != "Darwin"
+# wetext; platform_system == "Darwin"

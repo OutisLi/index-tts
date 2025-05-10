@@ -14,8 +14,8 @@ git clone git@github.com:OutisLi/index-tts.git
 conda create -n index-tts python=3.12 -y
 conda activate index-tts
 pip install -r requirements.txt
-pip install -e .
 conda install libstdcxx-ng -c conda-forge -y
+pip install -e .
 ```
 
 ### 2.2 Mac
@@ -36,13 +36,15 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-3. Download models:
+## 3. Download models:
 
--   Download by `modelscope`:
+### 3.1 Download by `modelscope`:
 
 ```shell
 modelscope download --model IndexTeam/Index-TTS --local_dir ./checkpoints
+```
 
+```shell
 wget -P checkpoints \
   https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth \
   https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth \
@@ -50,7 +52,9 @@ wget -P checkpoints \
   https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/dvae.pth \
   https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth \
   https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab
+```
 
+```shell
 wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
 wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth -P checkpoints
 wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bpe.model -P checkpoints
@@ -59,7 +63,19 @@ wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth -P ch
 wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
 ```
 
--   Download by `huggingface-cli`:
+-   for windows user:
+
+```shell
+winget install --id GNU.Wget2
+wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bpe.model -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/dvae.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
+```
+
+### 3.2 Download by `huggingface-cli`:
 
 ```bash
 huggingface-cli download IndexTeam/Index-TTS \
@@ -84,14 +100,13 @@ wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/gpt.pth -P checkpoi
 wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
 ```
 
-1. Run test script:
+## 4. Run test script:
 
 ```bash
-# Please put your prompt audio in 'test_data' and rename it to 'input.wav'
-PYTHONPATH=. python indextts/infer.py
+python demo.py
 ```
 
-5. Use as command line tool:
+# Use as command line tool:
 
 ```bash
 # Make sure pytorch has been installed before running this command
@@ -117,17 +132,3 @@ python webui.py
 ```
 
 Open your browser and visit `http://127.0.0.1:7860` to see the demo.
-
-## Note for Windows Users
-
-On Windows, you may encounter [an error](https://github.com/index-tts/index-tts/issues/61) when installing `pynini`:
-`ERROR: Failed building wheel for pynini`
-
-In this case, please install `pynini` via `conda`:
-
-```bash
-# after conda activate index-tts
-conda install -c conda-forge pynini==2.1.5
-pip install WeTextProcessing==1.0.3
-pip install -e ".[webui]"
-```

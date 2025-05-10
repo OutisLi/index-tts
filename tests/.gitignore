@@ -1,0 +1,3 @@
+*.wav
+!sample_prompt.wav
+!zero_shot_prompt.wav
