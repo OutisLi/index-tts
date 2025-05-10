@@ -9,5 +9,8 @@ checkpoints/*.pth
 checkpoints/*.vocab
 checkpoints/*.model
 checkpoints/.cache
+checkpoints/*temp
+checkpoints/.msc
+checkpoints/.mv
 outputs/
 build/

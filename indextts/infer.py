@@ -12,17 +12,17 @@ from torch.nn.utils.rnn import pad_sequence
 from omegaconf import OmegaConf
 from tqdm import tqdm
 
-import warnings
-
-warnings.filterwarnings("ignore", category=FutureWarning)
-warnings.filterwarnings("ignore", category=UserWarning)
-
 from indextts.BigVGAN.models import BigVGAN as Generator
 from indextts.gpt.model import UnifiedVoice
 from indextts.utils.checkpoint import load_checkpoint
 from indextts.utils.feature_extractors import MelSpectrogramFeatures
 
 from indextts.utils.front import TextNormalizer, TextTokenizer
+
+import warnings
+
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class IndexTTS:
@@ -93,7 +93,7 @@ class IndexTTS:
         print(">> GPT weights restored from:", self.gpt_path)
         if self.is_fp16:
             try:
-                import deepspeed
+                import deepspeed  # noqa: F401
 
                 use_deepspeed = True
             except (ImportError, OSError, CalledProcessError) as e:
@@ -118,9 +118,9 @@ class IndexTTS:
                     ">> Preload custom CUDA kernel for BigVGAN",
                     anti_alias_activation_cuda,
                 )
-            except:
+            except Exception as e:
                 print(
-                    ">> Failed to load custom CUDA kernel for BigVGAN. Falling back to torch."
+                    f">> Failed to load custom CUDA kernel for BigVGAN. Falling back to torch: {e}"
                 )
                 self.use_cuda_kernel = False
         self.bigvgan = Generator(self.cfg.bigvgan, use_cuda_kernel=self.use_cuda_kernel)
@@ -614,7 +614,7 @@ class IndexTTS:
                     wav = wav.squeeze(1)
 
                 wav = torch.clamp(32767 * wav, -32767.0, 32767.0)
-                print(f"wav shape: {wav.shape}", "min:", wav.min(), "max:", wav.max())
+                # print(f"wav shape: {wav.shape}", "min:", wav.min(), "max:", wav.max())
                 # wavs.append(wav[:, :-512])
                 wavs.append(wav.cpu())  # to cpu before saving
         end_time = time.perf_counter()

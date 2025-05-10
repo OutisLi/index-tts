@@ -1,7 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cu128
 transformers==4.36.2
-tokenizers==0.15.0
-einops==0.8.1
+tokenizers
+einops
 accelerate
 cn2an
 ffmpeg-python
@@ -24,7 +24,9 @@ sentencepiece
 librosa
 gradio
 tqdm
+deepspeed
 ruff
+modelscope
 
 WeTextProcessing; platform_machine != "Darwin"
 wetext; platform_system == "Darwin"
