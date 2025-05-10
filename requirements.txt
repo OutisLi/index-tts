@@ -17,7 +17,6 @@ opencv-python
 vocos
 tensorboard
 torch
-torchvision
 torchaudio
 omegaconf
 sentencepiece
@@ -28,5 +27,5 @@ deepspeed
 ruff
 modelscope
 
-WeTextProcessing; platform_machine != "Darwin"
+WeTextProcessing; platform_system != "Darwin"
 wetext; platform_system == "Darwin"
