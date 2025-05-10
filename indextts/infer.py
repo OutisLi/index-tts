@@ -8,6 +8,7 @@ import numpy as np
 import sentencepiece as spm
 import torch
 import torchaudio
+import torch_tensorrt
 from torch.nn.utils.rnn import pad_sequence
 from omegaconf import OmegaConf
 from tqdm import tqdm
@@ -90,6 +91,7 @@ class IndexTTS:
             self.gpt.eval().half()
         else:
             self.gpt.eval()
+        # self.gpt = torch.compile(self.gpt)  # 用优化后的模型替换原模型
         print(">> GPT weights restored from:", self.gpt_path)
         if self.is_fp16:
             try:
