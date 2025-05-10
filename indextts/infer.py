@@ -8,7 +8,7 @@ import numpy as np
 import sentencepiece as spm
 import torch
 import torchaudio
-import torch_tensorrt
+# import torch_tensorrt
 from torch.nn.utils.rnn import pad_sequence
 from omegaconf import OmegaConf
 from tqdm import tqdm

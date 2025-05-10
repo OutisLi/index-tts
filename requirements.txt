@@ -27,7 +27,7 @@ deepspeed
 ruff
 modelscope
 
-torch-tensorrt; platform_system == "Linux"
+# torch-tensorrt; platform_system == "Linux"
 
 WeTextProcessing; platform_system != "Darwin"
 wetext; platform_system == "Darwin"

@@ -25,7 +25,15 @@ conda create -n index-tts python=3.12 -y
 conda activate index-tts
 pip install -r requirements.txt
 pip install -e .
-conda install libstdcxx-ng -c conda-forge -y
+```
+
+### 2.3 Windows
+
+```bash
+conda create -n index-tts python=3.12 -y
+conda activate index-tts
+pip install -r requirements.txt
+pip install -e .
 ```
 
 3. Download models:
