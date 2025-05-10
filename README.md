@@ -114,7 +114,7 @@ git clone https://github.com/index-tts/index-tts.git
 ```
 2. Install dependencies:
 ```bash
-conda create -n index-tts python=3.10
+conda create -n index-tts python=3.12 -y
 conda activate index-tts
 pip install -r requirements.txt
 apt-get install ffmpeg

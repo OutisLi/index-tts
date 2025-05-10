@@ -27,7 +27,12 @@ from indextts.utils.front import TextNormalizer, TextTokenizer
 
 class IndexTTS:
     def __init__(
-        self, cfg_path="checkpoints/config.yaml", model_dir="checkpoints", is_fp16=True, device=None, use_cuda_kernel=None,
+        self,
+        cfg_path="checkpoints/config.yaml",
+        model_dir="checkpoints",
+        is_fp16=True,
+        device=None,
+        use_cuda_kernel=None,
     ):
         """
         Args:
@@ -40,14 +45,18 @@ class IndexTTS:
         if device is not None:
             self.device = device
             self.is_fp16 = False if device == "cpu" else is_fp16
-            self.use_cuda_kernel = use_cuda_kernel is not None and use_cuda_kernel and device.startswith("cuda")
+            self.use_cuda_kernel = (
+                use_cuda_kernel is not None
+                and use_cuda_kernel
+                and device.startswith("cuda")
+            )
         elif torch.cuda.is_available():
             self.device = "cuda:0"
             self.is_fp16 = is_fp16
             self.use_cuda_kernel = use_cuda_kernel is None or use_cuda_kernel
         elif hasattr(torch, "mps") and torch.backends.mps.is_available():
             self.device = "mps"
-            self.is_fp16 = False # Use float16 on MPS is overhead than float32
+            self.is_fp16 = False  # Use float16 on MPS is overhead than float32
             self.use_cuda_kernel = False
         else:
             self.device = "cpu"
@@ -91,9 +100,13 @@ class IndexTTS:
                 use_deepspeed = False
                 print(f">> DeepSpeed加载失败，回退到标准推理: {e}")
 
-            self.gpt.post_init_gpt2_config(use_deepspeed=use_deepspeed, kv_cache=True, half=True)
+            self.gpt.post_init_gpt2_config(
+                use_deepspeed=use_deepspeed, kv_cache=True, half=True
+            )
         else:
-            self.gpt.post_init_gpt2_config(use_deepspeed=False, kv_cache=False, half=False)
+            self.gpt.post_init_gpt2_config(
+                use_deepspeed=False, kv_cache=False, half=False
+            )
 
         if self.use_cuda_kernel:
             # preload the CUDA kernel for BigVGAN
@@ -101,9 +114,14 @@ class IndexTTS:
                 from indextts.BigVGAN.alias_free_activation.cuda import load
 
                 anti_alias_activation_cuda = load.load()
-                print(">> Preload custom CUDA kernel for BigVGAN", anti_alias_activation_cuda)
+                print(
+                    ">> Preload custom CUDA kernel for BigVGAN",
+                    anti_alias_activation_cuda,
+                )
             except:
-                print(">> Failed to load custom CUDA kernel for BigVGAN. Falling back to torch.")
+                print(
+                    ">> Failed to load custom CUDA kernel for BigVGAN. Falling back to torch."
+                )
                 self.use_cuda_kernel = False
         self.bigvgan = Generator(self.cfg.bigvgan, use_cuda_kernel=self.use_cuda_kernel)
         self.bigvgan_path = os.path.join(self.model_dir, self.cfg.bigvgan_checkpoint)
@@ -126,7 +144,9 @@ class IndexTTS:
         # 进度引用显示（可选）
         self.gr_progress = None
 
-    def remove_long_silence(self, codes: torch.Tensor, silent_token=52, max_consecutive=30):
+    def remove_long_silence(
+        self, codes: torch.Tensor, silent_token=52, max_consecutive=30
+    ):
         code_lens = []
         codes_list = []
         device = codes.device
@@ -193,8 +213,12 @@ class IndexTTS:
             pad_len = max_len - tensor.size(1)
             if pad_len > 0:
                 n = min(8, pad_len)
-                tensor = torch.nn.functional.pad(tensor, (0, n), value=self.cfg.gpt.stop_text_token)
-                tensor = torch.nn.functional.pad(tensor, (0, pad_len - n), value=self.cfg.gpt.start_text_token)
+                tensor = torch.nn.functional.pad(
+                    tensor, (0, n), value=self.cfg.gpt.stop_text_token
+                )
+                tensor = torch.nn.functional.pad(
+                    tensor, (0, pad_len - n), value=self.cfg.gpt.start_text_token
+                )
             tensor = tensor[:, :max_len]
             outputs.append(tensor)
         tokens = torch.cat(outputs, dim=0)
@@ -270,24 +294,32 @@ class IndexTTS:
         # text processing
         all_text_tokens: List[List[torch.Tensor]] = []
         self._set_gr_progress(0.1, "text processing...")
-        bucket_enable = True # 预分桶开关，优先保证质量=True。优先保证速度=False。
-        all_sentences = self.bucket_sentences(sentences, enable=bucket_enable) 
+        bucket_enable = True  # 预分桶开关，优先保证质量=True。优先保证速度=False。
+        all_sentences = self.bucket_sentences(sentences, enable=bucket_enable)
         for sentences in all_sentences:
             temp_tokens: List[torch.Tensor] = []
             all_text_tokens.append(temp_tokens)
             for item in sentences:
                 sent = item["sent"]
                 text_tokens = self.tokenizer.convert_tokens_to_ids(sent)
-                text_tokens = torch.tensor(text_tokens, dtype=torch.int32, device=self.device).unsqueeze(0)
+                text_tokens = torch.tensor(
+                    text_tokens, dtype=torch.int32, device=self.device
+                ).unsqueeze(0)
                 if verbose:
                     print(text_tokens)
-                    print(f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}")
+                    print(
+                        f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}"
+                    )
                     # debug tokenizer
-                    text_token_syms = self.tokenizer.convert_ids_to_tokens(text_tokens[0].tolist())
-                    print("text_token_syms is same as sentence tokens", text_token_syms == sent) 
+                    text_token_syms = self.tokenizer.convert_ids_to_tokens(
+                        text_tokens[0].tolist()
+                    )
+                    print(
+                        "text_token_syms is same as sentence tokens",
+                        text_token_syms == sent,
+                    )
                 temp_tokens.append(text_tokens)
-        
-            
+
         # Sequential processing of bucketing data
         all_batch_num = 0
         all_batch_codes = []
@@ -302,19 +334,26 @@ class IndexTTS:
             self._set_gr_progress(0.2, "gpt inference speech...")
             m_start_time = time.perf_counter()
             with torch.no_grad():
-                with torch.amp.autocast(batch_text_tokens.device.type, enabled=self.dtype is not None, dtype=self.dtype):
-                    temp_codes = self.gpt.inference_speech(batch_auto_conditioning, batch_text_tokens,
-                                        cond_mel_lengths=batch_cond_mel_lengths,
-                                        # text_lengths=text_len,
-                                        do_sample=True,
-                                        top_p=top_p,
-                                        top_k=top_k,
-                                        temperature=temperature,
-                                        num_return_sequences=autoregressive_batch_size,
-                                        length_penalty=length_penalty,
-                                        num_beams=num_beams,
-                                        repetition_penalty=repetition_penalty,
-                                        max_generate_length=max_mel_tokens)
+                with torch.amp.autocast(
+                    batch_text_tokens.device.type,
+                    enabled=self.dtype is not None,
+                    dtype=self.dtype,
+                ):
+                    temp_codes = self.gpt.inference_speech(
+                        batch_auto_conditioning,
+                        batch_text_tokens,
+                        cond_mel_lengths=batch_cond_mel_lengths,
+                        # text_lengths=text_len,
+                        do_sample=True,
+                        top_p=top_p,
+                        top_k=top_k,
+                        temperature=temperature,
+                        num_return_sequences=autoregressive_batch_size,
+                        length_penalty=length_penalty,
+                        num_beams=num_beams,
+                        repetition_penalty=repetition_penalty,
+                        max_generate_length=max_mel_tokens,
+                    )
                     all_batch_codes.append(temp_codes)
             gpt_gen_time += time.perf_counter() - m_start_time
 
@@ -322,32 +361,53 @@ class IndexTTS:
         self._set_gr_progress(0.5, "gpt inference latents...")
         all_idxs = []
         all_latents = []
-        for batch_codes, batch_tokens, batch_sentences in zip(all_batch_codes, all_text_tokens, all_sentences):
+        for batch_codes, batch_tokens, batch_sentences in zip(
+            all_batch_codes, all_text_tokens, all_sentences
+        ):
             for i in range(batch_codes.shape[0]):
                 codes = batch_codes[i]  # [x]
                 codes = codes[codes != self.cfg.gpt.stop_mel_token]
                 codes, _ = torch.unique_consecutive(codes, return_inverse=True)
                 codes = codes.unsqueeze(0)  # [x] -> [1, x]
-                code_lens = torch.tensor([codes.shape[-1]], device=codes.device, dtype=codes.dtype)
-                codes, code_lens = self.remove_long_silence(codes, silent_token=52, max_consecutive=30)
+                code_lens = torch.tensor(
+                    [codes.shape[-1]], device=codes.device, dtype=codes.dtype
+                )
+                codes, code_lens = self.remove_long_silence(
+                    codes, silent_token=52, max_consecutive=30
+                )
                 text_tokens = batch_tokens[i]
                 all_idxs.append(batch_sentences[i]["idx"])
                 m_start_time = time.perf_counter()
                 with torch.no_grad():
-                    with torch.amp.autocast(text_tokens.device.type, enabled=self.dtype is not None, dtype=self.dtype):
-                        latent = \
-                            self.gpt(auto_conditioning, text_tokens,
-                                        torch.tensor([text_tokens.shape[-1]], device=text_tokens.device), codes,
-                                        code_lens*self.gpt.mel_length_compression,
-                                        cond_mel_lengths=torch.tensor([auto_conditioning.shape[-1]], device=text_tokens.device),
-                                        return_latent=True, clip_inputs=False)
+                    with torch.amp.autocast(
+                        text_tokens.device.type,
+                        enabled=self.dtype is not None,
+                        dtype=self.dtype,
+                    ):
+                        latent = self.gpt(
+                            auto_conditioning,
+                            text_tokens,
+                            torch.tensor(
+                                [text_tokens.shape[-1]], device=text_tokens.device
+                            ),
+                            codes,
+                            code_lens * self.gpt.mel_length_compression,
+                            cond_mel_lengths=torch.tensor(
+                                [auto_conditioning.shape[-1]], device=text_tokens.device
+                            ),
+                            return_latent=True,
+                            clip_inputs=False,
+                        )
                         gpt_forward_time += time.perf_counter() - m_start_time
                         all_latents.append(latent)
 
         # bigvgan chunk
         chunk_size = 2
         all_latents = [all_latents[all_idxs.index(i)] for i in range(len(all_latents))]
-        chunk_latents = [all_latents[i : i + chunk_size] for i in range(0, len(all_latents), chunk_size)]
+        chunk_latents = [
+            all_latents[i : i + chunk_size]
+            for i in range(0, len(all_latents), chunk_size)
+        ]
         chunk_length = len(chunk_latents)
         latent_length = len(all_latents)
         all_latents = None
@@ -359,14 +419,16 @@ class IndexTTS:
             tqdm_progress.update(len(items))
             latent = torch.cat(items, dim=1)
             with torch.no_grad():
-                with torch.amp.autocast(latent.device.type, enabled=self.dtype is not None, dtype=self.dtype):
+                with torch.amp.autocast(
+                    latent.device.type, enabled=self.dtype is not None, dtype=self.dtype
+                ):
                     m_start_time = time.perf_counter()
                     wav, _ = self.bigvgan(latent, auto_conditioning.transpose(1, 2))
                     bigvgan_time += time.perf_counter() - m_start_time
                     wav = wav.squeeze(1)
                     pass
             wav = torch.clamp(32767 * wav, -32767.0, 32767.0)
-            wavs.append(wav.cpu()) # to cpu before saving
+            wavs.append(wav.cpu())  # to cpu before saving
 
         # clear cache
         tqdm_progress.close()  # 确保进度条被关闭
@@ -378,7 +440,9 @@ class IndexTTS:
         self._set_gr_progress(0.9, "save audio...")
         wav = torch.cat(wavs, dim=1)
         wav_length = wav.shape[-1] / sampling_rate
-        print(f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds")
+        print(
+            f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds"
+        )
         print(f">> gpt_gen_time: {gpt_gen_time:.2f} seconds")
         print(f">> gpt_forward_time: {gpt_forward_time:.2f} seconds")
         print(f">> bigvgan_time: {bigvgan_time:.2f} seconds")
@@ -454,39 +518,58 @@ class IndexTTS:
 
         for sent in sentences:
             text_tokens = self.tokenizer.convert_tokens_to_ids(sent)
-            text_tokens = torch.tensor(text_tokens, dtype=torch.int32, device=self.device).unsqueeze(0)
+            text_tokens = torch.tensor(
+                text_tokens, dtype=torch.int32, device=self.device
+            ).unsqueeze(0)
             # text_tokens = F.pad(text_tokens, (0, 1))  # This may not be necessary.
             # text_tokens = F.pad(text_tokens, (1, 0), value=0)
             # text_tokens = F.pad(text_tokens, (0, 1), value=1)
             if verbose:
                 print(text_tokens)
-                print(f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}")
+                print(
+                    f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}"
+                )
                 # debug tokenizer
-                text_token_syms = self.tokenizer.convert_ids_to_tokens(text_tokens[0].tolist())
-                print("text_token_syms is same as sentence tokens", text_token_syms == sent)
+                text_token_syms = self.tokenizer.convert_ids_to_tokens(
+                    text_tokens[0].tolist()
+                )
+                print(
+                    "text_token_syms is same as sentence tokens",
+                    text_token_syms == sent,
+                )
 
             # text_len = torch.IntTensor([text_tokens.size(1)], device=text_tokens.device)
             # print(text_len)
 
             m_start_time = time.perf_counter()
             with torch.no_grad():
-                with torch.amp.autocast(text_tokens.device.type, enabled=self.dtype is not None, dtype=self.dtype):
-                    codes = self.gpt.inference_speech(auto_conditioning, text_tokens,
-                                                        cond_mel_lengths=torch.tensor([auto_conditioning.shape[-1]],
-                                                                                      device=text_tokens.device),
-                                                        # text_lengths=text_len,
-                                                        do_sample=True,
-                                                        top_p=top_p,
-                                                        top_k=top_k,
-                                                        temperature=temperature,
-                                                        num_return_sequences=autoregressive_batch_size,
-                                                        length_penalty=length_penalty,
-                                                        num_beams=num_beams,
-                                                        repetition_penalty=repetition_penalty,
-                                                        max_generate_length=max_mel_tokens)
+                with torch.amp.autocast(
+                    text_tokens.device.type,
+                    enabled=self.dtype is not None,
+                    dtype=self.dtype,
+                ):
+                    codes = self.gpt.inference_speech(
+                        auto_conditioning,
+                        text_tokens,
+                        cond_mel_lengths=torch.tensor(
+                            [auto_conditioning.shape[-1]], device=text_tokens.device
+                        ),
+                        # text_lengths=text_len,
+                        do_sample=True,
+                        top_p=top_p,
+                        top_k=top_k,
+                        temperature=temperature,
+                        num_return_sequences=autoregressive_batch_size,
+                        length_penalty=length_penalty,
+                        num_beams=num_beams,
+                        repetition_penalty=repetition_penalty,
+                        max_generate_length=max_mel_tokens,
+                    )
                 gpt_gen_time += time.perf_counter() - m_start_time
                 # codes = codes[:, :-2]
-                code_lens = torch.tensor([codes.shape[-1]], device=codes.device, dtype=codes.dtype)
+                code_lens = torch.tensor(
+                    [codes.shape[-1]], device=codes.device, dtype=codes.dtype
+                )
                 if verbose:
                     print(codes, type(codes))
                     print(f"codes shape: {codes.shape}, codes type: {codes.dtype}")
@@ -494,7 +577,9 @@ class IndexTTS:
 
                 # remove ultra-long silence if exits
                 # temporarily fix the long silence bug.
-                codes, code_lens = self.remove_long_silence(codes, silent_token=52, max_consecutive=30)
+                codes, code_lens = self.remove_long_silence(
+                    codes, silent_token=52, max_consecutive=30
+                )
                 if verbose:
                     print(codes, type(codes))
                     print(f"fix codes shape: {codes.shape}, codes type: {codes.dtype}")
@@ -502,13 +587,25 @@ class IndexTTS:
 
                 m_start_time = time.perf_counter()
                 # latent, text_lens_out, code_lens_out = \
-                with torch.amp.autocast(text_tokens.device.type, enabled=self.dtype is not None, dtype=self.dtype):
-                    latent = \
-                        self.gpt(auto_conditioning, text_tokens,
-                                    torch.tensor([text_tokens.shape[-1]], device=text_tokens.device), codes,
-                                    code_lens*self.gpt.mel_length_compression,
-                                    cond_mel_lengths=torch.tensor([auto_conditioning.shape[-1]], device=text_tokens.device),
-                                    return_latent=True, clip_inputs=False)
+                with torch.amp.autocast(
+                    text_tokens.device.type,
+                    enabled=self.dtype is not None,
+                    dtype=self.dtype,
+                ):
+                    latent = self.gpt(
+                        auto_conditioning,
+                        text_tokens,
+                        torch.tensor(
+                            [text_tokens.shape[-1]], device=text_tokens.device
+                        ),
+                        codes,
+                        code_lens * self.gpt.mel_length_compression,
+                        cond_mel_lengths=torch.tensor(
+                            [auto_conditioning.shape[-1]], device=text_tokens.device
+                        ),
+                        return_latent=True,
+                        clip_inputs=False,
+                    )
                     gpt_forward_time += time.perf_counter() - m_start_time
 
                     m_start_time = time.perf_counter()
@@ -524,7 +621,9 @@ class IndexTTS:
 
         wav = torch.cat(wavs, dim=1)
         wav_length = wav.shape[-1] / sampling_rate
-        print(f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds")
+        print(
+            f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds"
+        )
         print(f">> gpt_gen_time: {gpt_gen_time:.2f} seconds")
         print(f">> gpt_forward_time: {gpt_forward_time:.2f} seconds")
         print(f">> bigvgan_time: {bigvgan_time:.2f} seconds")
@@ -552,10 +651,15 @@ class IndexTTS:
 
 
 if __name__ == "__main__":
-    prompt_wav="test_data/input.wav"
-    #text="晕 XUAN4 是 一 种 GAN3 觉"
-    #text='大家好，我现在正在bilibili 体验 ai 科技，说实话，来之前我绝对想不到！AI技术已经发展到这样匪夷所思的地步了！'
-    text="There is a vehicle arriving in dock number 7?"
+    prompt_wav = "test_data/input.wav"
+    # text="晕 XUAN4 是 一 种 GAN3 觉"
+    # text='大家好，我现在正在bilibili 体验 ai 科技，说实话，来之前我绝对想不到！AI技术已经发展到这样匪夷所思的地步了！'
+    text = "There is a vehicle arriving in dock number 7?"
 
-    tts = IndexTTS(cfg_path="checkpoints/config.yaml", model_dir="checkpoints", is_fp16=True, use_cuda_kernel=False)
+    tts = IndexTTS(
+        cfg_path="checkpoints/config.yaml",
+        model_dir="checkpoints",
+        is_fp16=True,
+        use_cuda_kernel=False,
+    )
     tts.infer(audio_prompt=prompt_wav, text=text, output_path="gen.wav", verbose=True)

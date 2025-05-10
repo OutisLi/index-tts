@@ -1,11 +1,15 @@
 import os
 import sys
 import warnings
+import argparse
+
 # Suppress warnings from tensorflow and other libraries
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+
 def main():
-    import argparse
+    # fmt: off
     parser = argparse.ArgumentParser(description="IndexTTS Command Line")
     parser.add_argument("text", type=str, help="Text to be synthesized")
     parser.add_argument("-v", "--voice", type=str, required=True, help="Path to the audio prompt file (wav format)")
@@ -15,6 +19,7 @@ def main():
     parser.add_argument("--fp16", action="store_true", default=True, help="Use FP16 for inference if available")
     parser.add_argument("-f", "--force", action="store_true", default=False, help="Force to overwrite the output file if it exists")
     parser.add_argument("-d", "--device", type=str, default=None, help="Device to run the model on (cpu, cuda, mps)." )
+    # fmt: on
     args = parser.parse_args()
     if len(args.text.strip()) == 0:
         print("ERROR: Text is empty.")
@@ -32,12 +37,14 @@ def main():
     output_path = args.output_path
     if os.path.exists(output_path):
         if not args.force:
-            print(f"ERROR: Output file {output_path} already exists. Use --force to overwrite.")
+            print(
+                f"ERROR: Output file {output_path} already exists. Use --force to overwrite."
+            )
             parser.print_help()
             sys.exit(1)
         else:
             os.remove(output_path)
-    
+
     try:
         import torch
     except ImportError:
@@ -51,12 +58,19 @@ def main():
             args.device = "mps"
         else:
             args.device = "cpu"
-            args.fp16 = False # Disable FP16 on CPU
+            args.fp16 = False  # Disable FP16 on CPU
             print("WARNING: Running on CPU may be slow.")
 
     from indextts.infer import IndexTTS
-    tts = IndexTTS(cfg_path=args.config, model_dir=args.model_dir, is_fp16=args.fp16, device=args.device)
+
+    tts = IndexTTS(
+        cfg_path=args.config,
+        model_dir=args.model_dir,
+        is_fp16=args.fp16,
+        device=args.device,
+    )
     tts.infer(audio_prompt=args.voice, text=args.text.strip(), output_path=output_path)
+
 
 if __name__ == "__main__":
     main()
