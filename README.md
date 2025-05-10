@@ -106,7 +106,7 @@ The main improvements and contributions are summarized as follows:
 1. Download this repository:
 
 ```bash
-git clone https://github.com/index-tts/index-tts.git
+git clone git@github.com:OutisLi/index-tts.git
 ```
 
 2. Install dependencies:
@@ -116,19 +116,33 @@ conda create -n index-tts python=3.12 -y
 conda activate index-tts
 pip install -r requirements.txt
 pip install -e .
-conda install -c conda-forge libstdcxx-ng
-apt-get install ffmpeg
+conda install libstdcxx-ng -c conda-forge -y
 ```
 
 3. Download models:
 
-- Download by `modelscope`:
+-   Download by `modelscope`:
 
 ```shell
 modelscope download --model IndexTeam/Index-TTS --local_dir ./checkpoints
+
+wget -P checkpoints \
+  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth \
+  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth \
+  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bpe.model \
+  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/dvae.pth \
+  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth \
+  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab
+
+wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bpe.model -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/dvae.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
 ```
 
-- Download by `huggingface-cli`:
+-   Download by `huggingface-cli`:
 
 ```bash
 huggingface-cli download IndexTeam/Index-TTS \
@@ -142,7 +156,7 @@ Recommended for China users. 如果下载速度慢，可以使用镜像：
 export HF_ENDPOINT="https://hf-mirror.com"
 ```
 
-- Or by `wget`:
+-   Or by `wget`:
 
 ```bash
 wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
