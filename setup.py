@@ -16,7 +16,7 @@ setup(
     install_requires=[
         "torch>=2.6.0",
         "torchaudio",
-        "transformers==4.36.2",
+        "transformers==4.48.3",
         "accelerate",
         "tokenizers",
         "einops",

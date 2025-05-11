@@ -1,5 +1,5 @@
 --extra-index-url https://download.pytorch.org/whl/cu128
-transformers==4.36.2
+transformers==4.48.3
 tokenizers
 einops
 accelerate
