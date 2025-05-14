@@ -25,8 +25,9 @@ Discord：https://discord.gg/uT32E7KDmy \
 
 ## 📣 Updates
 
--   `2025/03/25` 🔥🔥 We release the model parameters and inference code.
--   `2025/02/12` 🔥 We submitted our paper on arXiv, and released our demos and test sets.
+- `2025/05/14` 🔥🔥 We release the **IndexTTS-1.5**, Significantly improve the model's stability and its performance in the English language.
+- `2025/03/25` 🔥 We release IndexTTS-1.0 model parameters and inference code.
+- `2025/02/12` 🔥 We submitted our paper on arXiv, and released our demos and test sets.
 
 ## 🖥️ Method
 
@@ -43,6 +44,10 @@ The main improvements and contributions are summarized as follows:
 -   We release all test sets here, including those for polysyllabic words, subjective and objective test sets.
 
 ## Model Download
+| **HuggingFace**                                          | **ModelScope** |
+|----------------------------------------------------------|----------------------------------------------------------|
+| [IndexTTS](https://huggingface.co/IndexTeam/Index-TTS) | [IndexTTS](https://modelscope.cn/models/IndexTeam/Index-TTS) |
+| [😁IndexTTS-1.5](https://huggingface.co/IndexTeam/IndexTTS-1.5) | [IndexTTS-1.5](https://modelscope.cn/models/IndexTeam/IndexTTS-1.5) |
 
 | **HuggingFace**                                          | **ModelScope**                                               |
 | -------------------------------------------------------- | ------------------------------------------------------------ |
@@ -52,41 +57,49 @@ The main improvements and contributions are summarized as follows:
 
 **Word Error Rate (WER) Results for IndexTTS and Baseline Models on the** [**seed-test**](https://github.com/BytedanceSpeech/seed-tts-eval)
 
-|     **WER**     | **test_zh** | **test_en** | **test_hard** |
-| :-------------: | :---------: | :---------: | :-----------: |
-|    **Human**    |    1.26     |    2.14     |       -       |
-|   **SeedTTS**   |    1.002    |    1.945    |   **6.243**   |
-| **CosyVoice 2** |    1.45     |    2.57     |     6.83      |
-|    **F5TTS**    |    1.56     |    1.83     |     8.67      |
-| **FireRedTTS**  |    1.51     |    3.82     |     17.45     |
-|   **MaskGCT**   |    2.27     |    2.62     |     10.27     |
-|  **Spark-TTS**  |     1.2     |    1.98     |       -       |
-|  **MegaTTS 3**  |    1.36     |  **1.82**   |       -       |
-|  **IndexTTS**   |  **0.937**  |    1.936    |     6.831     |
+| **WER**                | **test_zh** | **test_en** | **test_hard** |
+|:----------------------:|:-----------:|:-----------:|:-------------:|
+| **Human**              | 1.26        | 2.14        | -             |
+| **SeedTTS**            | 1.002       | 1.945       | **6.243**     |
+| **CosyVoice 2**        | 1.45        | 2.57        | 6.83          |
+| **F5TTS**              | 1.56        | 1.83        | 8.67          |
+| **FireRedTTS**         | 1.51        | 3.82        | 17.45         |
+| **MaskGCT**            | 2.27        | 2.62        | 10.27         |
+| **Spark-TTS**          | 1.2         | 1.98        | -             |
+| **MegaTTS 3**          | 1.36        | 1.82        | -             |
+| **IndexTTS**           | 0.937       | 1.936       | 6.831         |
+| **IndexTTS-1.5**       | **0.821**   | **1.606**   | 6.565         |
+
 
 **Word Error Rate (WER) Results for IndexTTS and Baseline Models on the other opensource test**
 
-|    **Model**    | **aishell1_test** | **commonvoice_20_test_zh** | **commonvoice_20_test_en** | **librispeech_test_clean** | **avg** |
-| :-------------: | :---------------: | :------------------------: | :------------------------: | :------------------------: | :-----: |
-|    **Human**    |        2.0        |            9.5             |            10.0            |            2.4             |   5.1   |
-| **CosyVoice 2** |        1.8        |            9.1             |            7.3             |            4.9             |   5.9   |
-|    **F5TTS**    |        3.9        |            11.7            |            5.4             |            7.8             |   8.2   |
-| **Fishspeech**  |        2.4        |            11.4            |            8.8             |            8.0             |   8.3   |
-| **FireRedTTS**  |        2.2        |            11.0            |            16.3            |            5.7             |   7.7   |
-|    **XTTS**     |        3.0        |            11.4            |            7.1             |            3.5             |   6.0   |
-|  **IndexTTS**   |      **1.3**      |          **7.0**           |          **5.3**           |          **2.1**           | **3.7** |
+
+|    **Model**    | **aishell1_test** | **commonvoice_20_test_zh** | **commonvoice_20_test_en** | **librispeech_test_clean** |  **avg** |
+|:---------------:|:-----------------:|:--------------------------:|:--------------------------:|:--------------------------:|:--------:|
+|    **Human**    |        2.0        |            9.5             |            10.0            |            2.4             |   5.1    |
+| **CosyVoice 2** |        1.8        |            9.1             |            7.3             |            4.9             |   5.9    |
+|    **F5TTS**    |        3.9        |            11.7            |            5.4             |            7.8             |   8.2    |
+|  **Fishspeech** |        2.4        |            11.4            |            8.8             |            8.0             |   8.3    |
+|  **FireRedTTS** |        2.2        |            11.0            |            16.3            |            5.7             |   7.7    |
+|     **XTTS**    |        3.0        |            11.4            |            7.1             |            3.5             |   6.0    |
+|   **IndexTTS**  |      1.3          |          7.0               |            5.3             |          2.1             | 3.7       |
+|   **IndexTTS-1.5**  |      **1.2**     |          **6.8**          |          **3.9**          |          **1.7**          | **3.1** |
+
 
 **Speaker Similarity (SS) Results for IndexTTS and Baseline Models**
 
 |    **Model**    | **aishell1_test** | **commonvoice_20_test_zh** | **commonvoice_20_test_en** | **librispeech_test_clean** |  **avg**  |
-| :-------------: | :---------------: | :------------------------: | :------------------------: | :------------------------: | :-------: |
-|    **Human**    |       0.846       |           0.809            |           0.820            |           0.858            |   0.836   |
-| **CosyVoice 2** |     **0.796**     |           0.743            |           0.742            |         **0.837**          | **0.788** |
-|    **F5TTS**    |       0.743       |         **0.747**          |           0.746            |           0.828            |   0.779   |
-| **Fishspeech**  |       0.488       |           0.552            |           0.622            |           0.701            |   0.612   |
-| **FireRedTTS**  |       0.579       |           0.593            |           0.587            |           0.698            |   0.631   |
-|    **XTTS**     |       0.573       |           0.586            |           0.648            |           0.761            |   0.663   |
-|  **IndexTTS**   |       0.744       |           0.742            |         **0.758**          |           0.823            |   0.776   |
+|:---------------:|:-----------------:|:--------------------------:|:--------------------------:|:--------------------------:|:---------:|
+|    **Human**    |       0.846       |            0.809           |            0.820           |            0.858           |   0.836   |
+| **CosyVoice 2** |     **0.796**     |            0.743           |            0.742           |          **0.837**         | **0.788** |
+|    **F5TTS**    |       0.743       |          **0.747**         |            0.746           |            0.828           |   0.779   |
+|  **Fishspeech** |       0.488       |            0.552           |            0.622           |            0.701           |   0.612   |
+|  **FireRedTTS** |       0.579       |            0.593           |            0.587           |            0.698           |   0.631   |
+|     **XTTS**    |       0.573       |            0.586           |            0.648           |            0.761           |   0.663   |
+|   **IndexTTS**  |       0.744       |            0.742           |          **0.758**         |            0.823           |   0.776   |
+|   **IndexTTS-1.5**  |       0.741       |            0.722           |          0.753         |            0.819           |   0.771   |
+
+
 
 **MOS Scores for Zero-Shot Cloned Voice**
 
@@ -145,7 +158,7 @@ wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000
 -   Download by `huggingface-cli`:
 
 ```bash
-huggingface-cli download IndexTeam/Index-TTS \
+huggingface-cli download IndexTeam/IndexTTS-1.5 \
   bigvgan_discriminator.pth bigvgan_generator.pth bpe.model dvae.pth gpt.pth unigram_12000.vocab \
   --local-dir checkpoints
 ```
@@ -159,12 +172,12 @@ export HF_ENDPOINT="https://hf-mirror.com"
 -   Or by `wget`:
 
 ```bash
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/bpe.model -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/dvae.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/gpt.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_discriminator.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_generator.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/bpe.model -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/dvae.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/gpt.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/unigram_12000.vocab -P checkpoints
 ```
 
 1. Run test script:
