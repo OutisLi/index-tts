@@ -37,9 +37,7 @@ def main():
     output_path = args.output_path
     if os.path.exists(output_path):
         if not args.force:
-            print(
-                f"ERROR: Output file {output_path} already exists. Use --force to overwrite."
-            )
+            print(f"ERROR: Output file {output_path} already exists. Use --force to overwrite.")
             parser.print_help()
             sys.exit(1)
         else:

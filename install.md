@@ -36,49 +36,54 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+```shell
+# 将 front.py 中90行修改为：
+if platform.system() != "Linux":
+```
+
 ## 3. Download models:
 
 ### 3.1 Download by `modelscope`:
 
 ```shell
-modelscope download --model IndexTeam/Index-TTS --local_dir ./checkpoints
+modelscope download --model IndexTeam/IndexTTS-1.5 --local_dir ./checkpoints
 ```
 
 ```shell
 wget -P checkpoints \
-  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth \
-  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth \
-  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bpe.model \
-  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/dvae.pth \
-  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth \
-  https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab
+  https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_discriminator.pth \
+  https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_generator.pth \
+  https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bpe.model \
+  https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/dvae.pth \
+  https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/gpt.pth \
+  https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/unigram_12000.vocab
 ```
 
 ```shell
-wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
-wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth -P checkpoints
-wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bpe.model -P checkpoints
-wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/dvae.pth -P checkpoints
-wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth -P checkpoints
-wget https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_discriminator.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_generator.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bpe.model -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/dvae.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/gpt.pth -P checkpoints
+wget https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/unigram_12000.vocab -P checkpoints
 ```
 
 -   for windows user:
 
 ```shell
 winget install --id GNU.Wget2
-wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
-wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth -P checkpoints
-wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/bpe.model -P checkpoints
-wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/dvae.pth -P checkpoints
-wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/gpt.pth -P checkpoints
-wget2 https://modelscope.cn/models/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_discriminator.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_generator.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/bpe.model -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/dvae.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/gpt.pth -P checkpoints
+wget2 https://modelscope.cn/models/IndexTeam/IndexTTS-1.5/resolve/main/unigram_12000.vocab -P checkpoints
 ```
 
 ### 3.2 Download by `huggingface-cli`:
 
 ```bash
-huggingface-cli download IndexTeam/Index-TTS \
+huggingface-cli download IndexTeam/IndexTTS-1.5 \
   bigvgan_discriminator.pth bigvgan_generator.pth bpe.model dvae.pth gpt.pth unigram_12000.vocab \
   --local-dir checkpoints
 ```
@@ -92,12 +97,12 @@ export HF_ENDPOINT="https://hf-mirror.com"
 -   Or by `wget`:
 
 ```bash
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/bigvgan_discriminator.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/bigvgan_generator.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/bpe.model -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/dvae.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/gpt.pth -P checkpoints
-wget https://huggingface.co/IndexTeam/Index-TTS/resolve/main/unigram_12000.vocab -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_discriminator.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/bigvgan_generator.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/bpe.model -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/dvae.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/gpt.pth -P checkpoints
+wget https://huggingface.co/IndexTeam/IndexTTS-1.5/resolve/main/unigram_12000.vocab -P checkpoints
 ```
 
 ## 4. Run test script:

@@ -8,6 +8,7 @@ import numpy as np
 import sentencepiece as spm
 import torch
 import torchaudio
+
 # import torch_tensorrt
 from torch.nn.utils.rnn import pad_sequence
 from omegaconf import OmegaConf
@@ -46,11 +47,7 @@ class IndexTTS:
         if device is not None:
             self.device = device
             self.is_fp16 = False if device == "cpu" else is_fp16
-            self.use_cuda_kernel = (
-                use_cuda_kernel is not None
-                and use_cuda_kernel
-                and device.startswith("cuda")
-            )
+            self.use_cuda_kernel = use_cuda_kernel is not None and use_cuda_kernel and device.startswith("cuda")
         elif torch.cuda.is_available():
             self.device = "cuda:0"
             self.is_fp16 = is_fp16
@@ -102,13 +99,9 @@ class IndexTTS:
                 use_deepspeed = False
                 print(f">> DeepSpeed加载失败，回退到标准推理: {e}")
 
-            self.gpt.post_init_gpt2_config(
-                use_deepspeed=use_deepspeed, kv_cache=True, half=True
-            )
+            self.gpt.post_init_gpt2_config(use_deepspeed=use_deepspeed, kv_cache=True, half=True)
         else:
-            self.gpt.post_init_gpt2_config(
-                use_deepspeed=False, kv_cache=False, half=False
-            )
+            self.gpt.post_init_gpt2_config(use_deepspeed=False, kv_cache=False, half=False)
 
         if self.use_cuda_kernel:
             # preload the CUDA kernel for BigVGAN
@@ -121,9 +114,7 @@ class IndexTTS:
                     anti_alias_activation_cuda,
                 )
             except Exception as e:
-                print(
-                    f">> Failed to load custom CUDA kernel for BigVGAN. Falling back to torch: {e}"
-                )
+                print(f">> Failed to load custom CUDA kernel for BigVGAN. Falling back to torch: {e}")
                 self.use_cuda_kernel = False
         self.bigvgan = Generator(self.cfg.bigvgan, use_cuda_kernel=self.use_cuda_kernel)
         self.bigvgan_path = os.path.join(self.model_dir, self.cfg.bigvgan_checkpoint)
@@ -146,9 +137,7 @@ class IndexTTS:
         # 进度引用显示（可选）
         self.gr_progress = None
 
-    def remove_long_silence(
-        self, codes: torch.Tensor, silent_token=52, max_consecutive=30
-    ):
+    def remove_long_silence(self, codes: torch.Tensor, silent_token=52, max_consecutive=30):
         code_lens = []
         codes_list = []
         device = codes.device
@@ -215,12 +204,8 @@ class IndexTTS:
             pad_len = max_len - tensor.size(1)
             if pad_len > 0:
                 n = min(8, pad_len)
-                tensor = torch.nn.functional.pad(
-                    tensor, (0, n), value=self.cfg.gpt.stop_text_token
-                )
-                tensor = torch.nn.functional.pad(
-                    tensor, (0, pad_len - n), value=self.cfg.gpt.start_text_token
-                )
+                tensor = torch.nn.functional.pad(tensor, (0, n), value=self.cfg.gpt.stop_text_token)
+                tensor = torch.nn.functional.pad(tensor, (0, pad_len - n), value=self.cfg.gpt.start_text_token)
             tensor = tensor[:, :max_len]
             outputs.append(tensor)
         tokens = torch.cat(outputs, dim=0)
@@ -304,18 +289,12 @@ class IndexTTS:
             for item in sentences:
                 sent = item["sent"]
                 text_tokens = self.tokenizer.convert_tokens_to_ids(sent)
-                text_tokens = torch.tensor(
-                    text_tokens, dtype=torch.int32, device=self.device
-                ).unsqueeze(0)
+                text_tokens = torch.tensor(text_tokens, dtype=torch.int32, device=self.device).unsqueeze(0)
                 if verbose:
                     print(text_tokens)
-                    print(
-                        f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}"
-                    )
+                    print(f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}")
                     # debug tokenizer
-                    text_token_syms = self.tokenizer.convert_ids_to_tokens(
-                        text_tokens[0].tolist()
-                    )
+                    text_token_syms = self.tokenizer.convert_ids_to_tokens(text_tokens[0].tolist())
                     print(
                         "text_token_syms is same as sentence tokens",
                         text_token_syms == sent,
@@ -363,20 +342,14 @@ class IndexTTS:
         self._set_gr_progress(0.5, "gpt inference latents...")
         all_idxs = []
         all_latents = []
-        for batch_codes, batch_tokens, batch_sentences in zip(
-            all_batch_codes, all_text_tokens, all_sentences
-        ):
+        for batch_codes, batch_tokens, batch_sentences in zip(all_batch_codes, all_text_tokens, all_sentences):
             for i in range(batch_codes.shape[0]):
                 codes = batch_codes[i]  # [x]
                 codes = codes[codes != self.cfg.gpt.stop_mel_token]
                 codes, _ = torch.unique_consecutive(codes, return_inverse=True)
                 codes = codes.unsqueeze(0)  # [x] -> [1, x]
-                code_lens = torch.tensor(
-                    [codes.shape[-1]], device=codes.device, dtype=codes.dtype
-                )
-                codes, code_lens = self.remove_long_silence(
-                    codes, silent_token=52, max_consecutive=30
-                )
+                code_lens = torch.tensor([codes.shape[-1]], device=codes.device, dtype=codes.dtype)
+                codes, code_lens = self.remove_long_silence(codes, silent_token=52, max_consecutive=30)
                 text_tokens = batch_tokens[i]
                 all_idxs.append(batch_sentences[i]["idx"])
                 m_start_time = time.perf_counter()
@@ -389,14 +362,10 @@ class IndexTTS:
                         latent = self.gpt(
                             auto_conditioning,
                             text_tokens,
-                            torch.tensor(
-                                [text_tokens.shape[-1]], device=text_tokens.device
-                            ),
+                            torch.tensor([text_tokens.shape[-1]], device=text_tokens.device),
                             codes,
                             code_lens * self.gpt.mel_length_compression,
-                            cond_mel_lengths=torch.tensor(
-                                [auto_conditioning.shape[-1]], device=text_tokens.device
-                            ),
+                            cond_mel_lengths=torch.tensor([auto_conditioning.shape[-1]], device=text_tokens.device),
                             return_latent=True,
                             clip_inputs=False,
                         )
@@ -406,10 +375,7 @@ class IndexTTS:
         # bigvgan chunk
         chunk_size = 2
         all_latents = [all_latents[all_idxs.index(i)] for i in range(len(all_latents))]
-        chunk_latents = [
-            all_latents[i : i + chunk_size]
-            for i in range(0, len(all_latents), chunk_size)
-        ]
+        chunk_latents = [all_latents[i : i + chunk_size] for i in range(0, len(all_latents), chunk_size)]
         chunk_length = len(chunk_latents)
         latent_length = len(all_latents)
         all_latents = None
@@ -421,9 +387,7 @@ class IndexTTS:
             tqdm_progress.update(len(items))
             latent = torch.cat(items, dim=1)
             with torch.no_grad():
-                with torch.amp.autocast(
-                    latent.device.type, enabled=self.dtype is not None, dtype=self.dtype
-                ):
+                with torch.amp.autocast(latent.device.type, enabled=self.dtype is not None, dtype=self.dtype):
                     m_start_time = time.perf_counter()
                     wav, _ = self.bigvgan(latent, auto_conditioning.transpose(1, 2))
                     bigvgan_time += time.perf_counter() - m_start_time
@@ -442,9 +406,7 @@ class IndexTTS:
         self._set_gr_progress(0.9, "save audio...")
         wav = torch.cat(wavs, dim=1)
         wav_length = wav.shape[-1] / sampling_rate
-        print(
-            f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds"
-        )
+        print(f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds")
         print(f">> gpt_gen_time: {gpt_gen_time:.2f} seconds")
         print(f">> gpt_forward_time: {gpt_forward_time:.2f} seconds")
         print(f">> bigvgan_time: {bigvgan_time:.2f} seconds")
@@ -520,21 +482,15 @@ class IndexTTS:
 
         for sent in sentences:
             text_tokens = self.tokenizer.convert_tokens_to_ids(sent)
-            text_tokens = torch.tensor(
-                text_tokens, dtype=torch.int32, device=self.device
-            ).unsqueeze(0)
+            text_tokens = torch.tensor(text_tokens, dtype=torch.int32, device=self.device).unsqueeze(0)
             # text_tokens = F.pad(text_tokens, (0, 1))  # This may not be necessary.
             # text_tokens = F.pad(text_tokens, (1, 0), value=0)
             # text_tokens = F.pad(text_tokens, (0, 1), value=1)
             if verbose:
                 print(text_tokens)
-                print(
-                    f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}"
-                )
+                print(f"text_tokens shape: {text_tokens.shape}, text_tokens type: {text_tokens.dtype}")
                 # debug tokenizer
-                text_token_syms = self.tokenizer.convert_ids_to_tokens(
-                    text_tokens[0].tolist()
-                )
+                text_token_syms = self.tokenizer.convert_ids_to_tokens(text_tokens[0].tolist())
                 print(
                     "text_token_syms is same as sentence tokens",
                     text_token_syms == sent,
@@ -553,9 +509,7 @@ class IndexTTS:
                     codes = self.gpt.inference_speech(
                         auto_conditioning,
                         text_tokens,
-                        cond_mel_lengths=torch.tensor(
-                            [auto_conditioning.shape[-1]], device=text_tokens.device
-                        ),
+                        cond_mel_lengths=torch.tensor([auto_conditioning.shape[-1]], device=text_tokens.device),
                         # text_lengths=text_len,
                         do_sample=True,
                         top_p=top_p,
@@ -569,9 +523,7 @@ class IndexTTS:
                     )
                 gpt_gen_time += time.perf_counter() - m_start_time
                 # codes = codes[:, :-2]
-                code_lens = torch.tensor(
-                    [codes.shape[-1]], device=codes.device, dtype=codes.dtype
-                )
+                code_lens = torch.tensor([codes.shape[-1]], device=codes.device, dtype=codes.dtype)
                 if verbose:
                     print(codes, type(codes))
                     print(f"codes shape: {codes.shape}, codes type: {codes.dtype}")
@@ -579,9 +531,7 @@ class IndexTTS:
 
                 # remove ultra-long silence if exits
                 # temporarily fix the long silence bug.
-                codes, code_lens = self.remove_long_silence(
-                    codes, silent_token=52, max_consecutive=30
-                )
+                codes, code_lens = self.remove_long_silence(codes, silent_token=52, max_consecutive=30)
                 if verbose:
                     print(codes, type(codes))
                     print(f"fix codes shape: {codes.shape}, codes type: {codes.dtype}")
@@ -597,14 +547,10 @@ class IndexTTS:
                     latent = self.gpt(
                         auto_conditioning,
                         text_tokens,
-                        torch.tensor(
-                            [text_tokens.shape[-1]], device=text_tokens.device
-                        ),
+                        torch.tensor([text_tokens.shape[-1]], device=text_tokens.device),
                         codes,
                         code_lens * self.gpt.mel_length_compression,
-                        cond_mel_lengths=torch.tensor(
-                            [auto_conditioning.shape[-1]], device=text_tokens.device
-                        ),
+                        cond_mel_lengths=torch.tensor([auto_conditioning.shape[-1]], device=text_tokens.device),
                         return_latent=True,
                         clip_inputs=False,
                     )
@@ -623,9 +569,7 @@ class IndexTTS:
 
         wav = torch.cat(wavs, dim=1)
         wav_length = wav.shape[-1] / sampling_rate
-        print(
-            f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds"
-        )
+        print(f">> Reference audio length: {cond_mel_frame * 256 / sampling_rate:.2f} seconds")
         print(f">> gpt_gen_time: {gpt_gen_time:.2f} seconds")
         print(f">> gpt_forward_time: {gpt_forward_time:.2f} seconds")
         print(f">> bigvgan_time: {bigvgan_time:.2f} seconds")

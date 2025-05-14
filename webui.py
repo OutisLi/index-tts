@@ -70,9 +70,7 @@ with gr.Blocks() as demo:
             if prompt_list:
                 default = prompt_list[0]
             with gr.Column():
-                input_text_single = gr.TextArea(
-                    label="请输入目标文本", key="input_text_single"
-                )
+                input_text_single = gr.TextArea(label="请输入目标文本", key="input_text_single")
                 infer_mode = gr.Radio(
                     choices=["普通推理", "批次推理"],
                     label="选择推理模式（批次推理：更适合长句，性能翻倍）",

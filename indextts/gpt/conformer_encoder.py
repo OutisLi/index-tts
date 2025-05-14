@@ -226,9 +226,7 @@ class ConformerEncoderLayer(nn.Module):
             self.ff_scale = 1.0
         if self.conv_module is not None:
             self.norm_conv = nn.LayerNorm(size, eps=1e-5)  # for the CNN module
-            self.norm_final = nn.LayerNorm(
-                size, eps=1e-5
-            )  # for the final output of the block
+            self.norm_final = nn.LayerNorm(size, eps=1e-5)  # for the final output of the block
         self.dropout = nn.Dropout(dropout_rate)
         self.size = size
         self.normalize_before = normalize_before
@@ -527,12 +525,8 @@ class ConformerEncoder(BaseEncoder):
                     output_size,
                     encoder_selfattn_layer(*encoder_selfattn_layer_args),
                     positionwise_layer(*positionwise_layer_args),
-                    positionwise_layer(*positionwise_layer_args)
-                    if macaron_style
-                    else None,
-                    convolution_layer(*convolution_layer_args)
-                    if use_cnn_module
-                    else None,
+                    positionwise_layer(*positionwise_layer_args) if macaron_style else None,
+                    convolution_layer(*convolution_layer_args) if use_cnn_module else None,
                     dropout_rate,
                     normalize_before,
                     concat_after,

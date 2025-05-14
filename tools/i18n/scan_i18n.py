@@ -4,9 +4,7 @@ import json
 import os
 from collections import OrderedDict
 
-I18N_JSON_DIR: os.PathLike = os.path.join(
-    os.path.dirname(os.path.relpath(__file__)), "locale"
-)
+I18N_JSON_DIR: os.PathLike = os.path.join(os.path.dirname(os.path.relpath(__file__)), "locale")
 DEFAULT_LANGUAGE: str = "zh_CN"  # 默认语言
 TITLE_LEN: int = 60  # 标题显示长度
 KEY_LEN: int = 30  # 键名显示长度
@@ -17,11 +15,7 @@ SORT_KEYS: bool = False  # 是否按全局键名写入文件
 def extract_i18n_strings(node):
     i18n_strings = []
 
-    if (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "i18n"
-    ):
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "i18n":
         for arg in node.args:
             if isinstance(arg, ast.Str):
                 i18n_strings.append(arg.s)
@@ -93,11 +87,7 @@ def update_i18n_json(json_file, standard_keys):
     json_data = OrderedDict(
         sorted(
             json_data.items(),
-            key=lambda x: (
-                list(standard_keys).index(x[0])
-                if x[0] in standard_keys and not x[1].startswith("#!")
-                else len(json_data),
-            ),
+            key=lambda x: (list(standard_keys).index(x[0]) if x[0] in standard_keys and not x[1].startswith("#!") else len(json_data),),
         )
     )
     # 打印处理后的 JSON 条目数
@@ -118,19 +108,10 @@ def update_i18n_json(json_file, standard_keys):
     # 打印是否有重复的值
     for value, keys in duplicate_items.items():
         if len(keys) > 1:
-            print(
-                "\n".join(
-                    [
-                        f"\033[31m{'[Failed] Duplicate Value'.ljust(KEY_LEN)}: {key} -> {value}\033[0m"
-                        for key in keys
-                    ]
-                )
-            )
+            print("\n".join([f"\033[31m{'[Failed] Duplicate Value'.ljust(KEY_LEN)}: {key} -> {value}\033[0m" for key in keys]))
 
     if num_miss_translation > 0:
-        print(
-            f"\033[31m{'[Failed] Missing Translation'.ljust(KEY_LEN)}: {num_miss_translation}\033[0m"
-        )
+        print(f"\033[31m{'[Failed] Missing Translation'.ljust(KEY_LEN)}: {num_miss_translation}\033[0m")
     else:
         print(f"\033[32m[Passed] All Keys Translated\033[0m")
     # 将处理后的结果写入 JSON 文件

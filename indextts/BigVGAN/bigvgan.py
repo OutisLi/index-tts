@@ -89,9 +89,7 @@ class AMPBlock1(torch.nn.Module):
         )
         self.convs2.apply(init_weights)
 
-        self.num_layers = len(self.convs1) + len(
-            self.convs2
-        )  # Total number of conv layers
+        self.num_layers = len(self.convs1) + len(self.convs2)  # Total number of conv layers
 
         # Select which Activation1d, lazy-load cuda version to ensure backward compatibility
         if self.h.get("use_cuda_kernel", False):
@@ -106,30 +104,14 @@ class AMPBlock1(torch.nn.Module):
         # Activation functions
         if activation == "snake":
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.Snake(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.Snake(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
         elif activation == "snakebeta":
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.SnakeBeta(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.SnakeBeta(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
         else:
-            raise NotImplementedError(
-                "activation incorrectly specified. check the config file and look for 'activation'."
-            )
+            raise NotImplementedError("activation incorrectly specified. check the config file and look for 'activation'.")
 
     def forward(self, x):
         acts1, acts2 = self.activations[::2], self.activations[1::2]
@@ -206,30 +188,14 @@ class AMPBlock2(torch.nn.Module):
         # Activation functions
         if activation == "snake":
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.Snake(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.Snake(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
         elif activation == "snakebeta":
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.SnakeBeta(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.SnakeBeta(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
         else:
-            raise NotImplementedError(
-                "activation incorrectly specified. check the config file and look for 'activation'."
-            )
+            raise NotImplementedError("activation incorrectly specified. check the config file and look for 'activation'.")
 
     def forward(self, x):
         for c, a in zip(self.convs, self.activations):
@@ -292,9 +258,7 @@ class BigVGAN(
         self.cond_in_each_up_layer = h.cond_d_vector_in_each_upsampling_layer
 
         # Pre-conv
-        self.conv_pre = weight_norm(
-            Conv1d(h.gpt_dim, h.upsample_initial_channel, 7, 1, padding=3)
-        )
+        self.conv_pre = weight_norm(Conv1d(h.gpt_dim, h.upsample_initial_channel, 7, 1, padding=3))
 
         # Define which AMPBlock to use. BigVGAN uses AMPBlock1 as default
         if h.resblock == "1":
@@ -302,9 +266,7 @@ class BigVGAN(
         elif h.resblock == "2":
             resblock_class = AMPBlock2
         else:
-            raise ValueError(
-                f"Incorrect resblock class specified in hyperparameters. Got {h.resblock}"
-            )
+            raise ValueError(f"Incorrect resblock class specified in hyperparameters. Got {h.resblock}")
 
         # Transposed conv-based upsamplers. does not apply anti-aliasing
         self.ups = nn.ModuleList()
@@ -329,35 +291,23 @@ class BigVGAN(
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
             ch = h.upsample_initial_channel // (2 ** (i + 1))
-            for j, (k, d) in enumerate(
-                zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)
-            ):
-                self.resblocks.append(
-                    resblock_class(h, ch, k, d, activation=h.activation)
-                )
+            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
+                self.resblocks.append(resblock_class(h, ch, k, d, activation=h.activation))
 
         # Post-conv
         activation_post = (
             activations.Snake(ch, alpha_logscale=h.snake_logscale)
             if h.activation == "snake"
-            else (
-                activations.SnakeBeta(ch, alpha_logscale=h.snake_logscale)
-                if h.activation == "snakebeta"
-                else None
-            )
+            else (activations.SnakeBeta(ch, alpha_logscale=h.snake_logscale) if h.activation == "snakebeta" else None)
         )
         if activation_post is None:
-            raise NotImplementedError(
-                "activation incorrectly specified. check the config file and look for 'activation'."
-            )
+            raise NotImplementedError("activation incorrectly specified. check the config file and look for 'activation'.")
 
         self.activation_post = Activation1d(activation=activation_post)
 
         # Whether to use bias for the final conv_post. Default to True for backward compatibility
         self.use_bias_at_final = h.get("use_bias_at_final", True)
-        self.conv_post = weight_norm(
-            Conv1d(ch, 1, 7, 1, padding=3, bias=self.use_bias_at_final)
-        )
+        self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3, bias=self.use_bias_at_final))
 
         # Weight initialization
         for i in range(len(self.ups)):
@@ -367,12 +317,8 @@ class BigVGAN(
         # Final tanh activation. Defaults to True for backward compatibility
         self.use_tanh_at_final = h.get("use_tanh_at_final", True)
 
-        self.speaker_encoder = ECAPA_TDNN(
-            h.num_mels, lin_neurons=h.speaker_embedding_dim
-        )
-        self.cond_layer = nn.Conv1d(
-            h.speaker_embedding_dim, h.upsample_initial_channel, 1
-        )
+        self.speaker_encoder = ECAPA_TDNN(h.num_mels, lin_neurons=h.speaker_embedding_dim)
+        self.cond_layer = nn.Conv1d(h.speaker_embedding_dim, h.upsample_initial_channel, 1)
         if self.cond_in_each_up_layer:
             self.conds = nn.ModuleList()
             for i in range(len(self.ups)):
@@ -539,9 +485,7 @@ class BigVGAN(
         try:
             model.load_state_dict(checkpoint_dict["generator"])
         except RuntimeError:
-            print(
-                f"[INFO] the pretrained checkpoint does not contain weight norm. Loading the checkpoint after removing weight norm!"
-            )
+            print(f"[INFO] the pretrained checkpoint does not contain weight norm. Loading the checkpoint after removing weight norm!")
             model.remove_weight_norm()
             model.load_state_dict(checkpoint_dict["generator"])
 

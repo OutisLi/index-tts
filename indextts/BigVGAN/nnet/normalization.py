@@ -517,9 +517,7 @@ class ExponentialMovingAverage(nn.Module):
                 1,
             )
         )
-        self._weights = nn.Parameter(
-            weights * self._coeff_init, requires_grad=trainable
-        )
+        self._weights = nn.Parameter(weights * self._coeff_init, requires_grad=trainable)
 
     def forward(self, x):
         """Returns the normalized input tensor.
@@ -614,12 +612,8 @@ class PCEN(nn.Module):
         self._floor = floor
         self._per_channel_smooth_coef = per_channel_smooth_coef
         self.skip_transpose = skip_transpose
-        self.alpha = nn.Parameter(
-            torch.ones(input_size) * alpha, requires_grad=trainable
-        )
-        self.delta = nn.Parameter(
-            torch.ones(input_size) * delta, requires_grad=trainable
-        )
+        self.alpha = nn.Parameter(torch.ones(input_size) * alpha, requires_grad=trainable)
+        self.delta = nn.Parameter(torch.ones(input_size) * delta, requires_grad=trainable)
         self.root = nn.Parameter(torch.ones(input_size) * root, requires_grad=trainable)
 
         self.ema = ExponentialMovingAverage(
@@ -649,12 +643,9 @@ class PCEN(nn.Module):
         root = torch.max(self.root, torch.tensor(1.0, dtype=x.dtype, device=x.device))
         ema_smoother = self.ema(x)
         one_over_root = 1.0 / root
-        output = (
-            x / (self._floor + ema_smoother) ** alpha.view(1, -1, 1)
-            + self.delta.view(1, -1, 1)
-        ) ** one_over_root.view(1, -1, 1) - self.delta.view(
+        output = (x / (self._floor + ema_smoother) ** alpha.view(1, -1, 1) + self.delta.view(1, -1, 1)) ** one_over_root.view(
             1, -1, 1
-        ) ** one_over_root.view(1, -1, 1)
+        ) - self.delta.view(1, -1, 1) ** one_over_root.view(1, -1, 1)
         if not self.skip_transpose:
             output = output.transpose(1, -1)
         return output

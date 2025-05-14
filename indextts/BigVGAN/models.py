@@ -94,45 +94,23 @@ class AMPBlock1(torch.nn.Module):
         )
         self.convs2.apply(init_weights)
 
-        self.num_layers = len(self.convs1) + len(
-            self.convs2
-        )  # total number of conv layers
+        self.num_layers = len(self.convs1) + len(self.convs2)  # total number of conv layers
         if self.h.get("use_cuda_kernel", False):
             from indextts.BigVGAN.alias_free_activation.cuda.activation1d import (
                 Activation1d,
             )
         else:
             from indextts.BigVGAN.alias_free_torch import Activation1d
-        if (
-            activation == "snake"
-        ):  # periodic nonlinearity with snake function and anti-aliasing
+        if activation == "snake":  # periodic nonlinearity with snake function and anti-aliasing
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.Snake(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.Snake(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
-        elif (
-            activation == "snakebeta"
-        ):  # periodic nonlinearity with snakebeta function and anti-aliasing
+        elif activation == "snakebeta":  # periodic nonlinearity with snakebeta function and anti-aliasing
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.SnakeBeta(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.SnakeBeta(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
         else:
-            raise NotImplementedError(
-                "activation incorrectly specified. check the config file and look for 'activation'."
-            )
+            raise NotImplementedError("activation incorrectly specified. check the config file and look for 'activation'.")
 
     def forward(self, x):
         acts1, acts2 = self.activations[::2], self.activations[1::2]
@@ -191,36 +169,16 @@ class AMPBlock2(torch.nn.Module):
         else:
             from indextts.BigVGAN.alias_free_torch import Activation1d
 
-        if (
-            activation == "snake"
-        ):  # periodic nonlinearity with snake function and anti-aliasing
+        if activation == "snake":  # periodic nonlinearity with snake function and anti-aliasing
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.Snake(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.Snake(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
-        elif (
-            activation == "snakebeta"
-        ):  # periodic nonlinearity with snakebeta function and anti-aliasing
+        elif activation == "snakebeta":  # periodic nonlinearity with snakebeta function and anti-aliasing
             self.activations = nn.ModuleList(
-                [
-                    Activation1d(
-                        activation=activations.SnakeBeta(
-                            channels, alpha_logscale=h.snake_logscale
-                        )
-                    )
-                    for _ in range(self.num_layers)
-                ]
+                [Activation1d(activation=activations.SnakeBeta(channels, alpha_logscale=h.snake_logscale)) for _ in range(self.num_layers)]
             )
         else:
-            raise NotImplementedError(
-                "activation incorrectly specified. check the config file and look for 'activation'."
-            )
+            raise NotImplementedError("activation incorrectly specified. check the config file and look for 'activation'.")
 
     def forward(self, x):
         for c, a in zip(self.convs, self.activations):
@@ -254,9 +212,7 @@ class BigVGAN(torch.nn.Module):
         self.cond_in_each_up_layer = h.cond_d_vector_in_each_upsampling_layer
 
         # pre conv
-        self.conv_pre = weight_norm(
-            Conv1d(h.gpt_dim, h.upsample_initial_channel, 7, 1, padding=3)
-        )
+        self.conv_pre = weight_norm(Conv1d(h.gpt_dim, h.upsample_initial_channel, 7, 1, padding=3))
 
         # define which AMPBlock to use. BigVGAN uses AMPBlock1 as default
         resblock = AMPBlock1 if h.resblock == "1" else AMPBlock2
@@ -284,12 +240,8 @@ class BigVGAN(torch.nn.Module):
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
             ch = h.upsample_initial_channel // (2 ** (i + 1))
-            for j, (k, d) in enumerate(
-                zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)
-            ):
-                self.resblocks.append(
-                    resblock(self.h, ch, k, d, activation=h.activation)
-                )
+            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
+                self.resblocks.append(resblock(self.h, ch, k, d, activation=h.activation))
         if use_cuda_kernel:
             from indextts.BigVGAN.alias_free_activation.cuda.activation1d import (
                 Activation1d,
@@ -298,20 +250,14 @@ class BigVGAN(torch.nn.Module):
             from indextts.BigVGAN.alias_free_torch import Activation1d
 
         # post conv
-        if (
-            h.activation == "snake"
-        ):  # periodic nonlinearity with snake function and anti-aliasing
+        if h.activation == "snake":  # periodic nonlinearity with snake function and anti-aliasing
             activation_post = activations.Snake(ch, alpha_logscale=h.snake_logscale)
             self.activation_post = Activation1d(activation=activation_post)
-        elif (
-            h.activation == "snakebeta"
-        ):  # periodic nonlinearity with snakebeta function and anti-aliasing
+        elif h.activation == "snakebeta":  # periodic nonlinearity with snakebeta function and anti-aliasing
             activation_post = activations.SnakeBeta(ch, alpha_logscale=h.snake_logscale)
             self.activation_post = Activation1d(activation=activation_post)
         else:
-            raise NotImplementedError(
-                "activation incorrectly specified. check the config file and look for 'activation'."
-            )
+            raise NotImplementedError("activation incorrectly specified. check the config file and look for 'activation'.")
 
         self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3))
 
@@ -320,12 +266,8 @@ class BigVGAN(torch.nn.Module):
             self.ups[i].apply(init_weights)
         self.conv_post.apply(init_weights)
 
-        self.speaker_encoder = ECAPA_TDNN(
-            h.num_mels, lin_neurons=h.speaker_embedding_dim
-        )
-        self.cond_layer = nn.Conv1d(
-            h.speaker_embedding_dim, h.upsample_initial_channel, 1
-        )
+        self.speaker_encoder = ECAPA_TDNN(h.num_mels, lin_neurons=h.speaker_embedding_dim)
+        self.cond_layer = nn.Conv1d(h.speaker_embedding_dim, h.upsample_initial_channel, 1)
         if self.cond_in_each_up_layer:
             self.conds = nn.ModuleList()
             for i in range(len(self.ups)):
@@ -404,16 +346,9 @@ class BigVGAN(torch.nn.Module):
 
     def cal_clip_loss(self, image_features, text_features, logit_scale):
         device = image_features.device
-        logits_per_image, logits_per_text = self.get_logits(
-            image_features, text_features, logit_scale
-        )
-        labels = torch.arange(
-            logits_per_image.shape[0], device=device, dtype=torch.long
-        )
-        total_loss = (
-            F.cross_entropy(logits_per_image, labels)
-            + F.cross_entropy(logits_per_text, labels)
-        ) / 2
+        logits_per_image, logits_per_text = self.get_logits(image_features, text_features, logit_scale)
+        labels = torch.arange(logits_per_image.shape[0], device=device, dtype=torch.long)
+        total_loss = (F.cross_entropy(logits_per_image, labels) + F.cross_entropy(logits_per_text, labels)) / 2
         return total_loss
 
     def get_logits(self, image_features, text_features, logit_scale):
@@ -477,9 +412,7 @@ class DiscriminatorP(torch.nn.Module):
                 ),
             ]
         )
-        self.conv_post = norm_f(
-            Conv2d(int(1024 * self.d_mult), 1, (3, 1), 1, padding=(1, 0))
-        )
+        self.conv_post = norm_f(Conv2d(int(1024 * self.d_mult), 1, (3, 1), 1, padding=(1, 0)))
 
     def forward(self, x):
         fmap = []
@@ -508,10 +441,7 @@ class MultiPeriodDiscriminator(torch.nn.Module):
         super(MultiPeriodDiscriminator, self).__init__()
         self.mpd_reshapes = h.mpd_reshapes
         print("mpd_reshapes: {}".format(self.mpd_reshapes))
-        discriminators = [
-            DiscriminatorP(h, rs, use_spectral_norm=h.use_spectral_norm)
-            for rs in self.mpd_reshapes
-        ]
+        discriminators = [DiscriminatorP(h, rs, use_spectral_norm=h.use_spectral_norm) for rs in self.mpd_reshapes]
         self.discriminators = nn.ModuleList(discriminators)
 
     def forward(self, y, y_hat):
@@ -535,28 +465,16 @@ class DiscriminatorR(nn.Module):
         super().__init__()
 
         self.resolution = resolution
-        assert len(self.resolution) == 3, (
-            "MRD layer requires list with len=3, got {}".format(self.resolution)
-        )
+        assert len(self.resolution) == 3, "MRD layer requires list with len=3, got {}".format(self.resolution)
         self.lrelu_slope = LRELU_SLOPE
 
         norm_f = weight_norm if cfg.use_spectral_norm == False else spectral_norm
         if hasattr(cfg, "mrd_use_spectral_norm"):
-            print(
-                "INFO: overriding MRD use_spectral_norm as {}".format(
-                    cfg.mrd_use_spectral_norm
-                )
-            )
-            norm_f = (
-                weight_norm if cfg.mrd_use_spectral_norm == False else spectral_norm
-            )
+            print("INFO: overriding MRD use_spectral_norm as {}".format(cfg.mrd_use_spectral_norm))
+            norm_f = weight_norm if cfg.mrd_use_spectral_norm == False else spectral_norm
         self.d_mult = cfg.discriminator_channel_mult
         if hasattr(cfg, "mrd_channel_mult"):
-            print(
-                "INFO: overriding mrd channel multiplier as {}".format(
-                    cfg.mrd_channel_mult
-                )
-            )
+            print("INFO: overriding mrd channel multiplier as {}".format(cfg.mrd_channel_mult))
             self.d_mult = cfg.mrd_channel_mult
 
         self.convs = nn.ModuleList(
@@ -599,9 +517,7 @@ class DiscriminatorR(nn.Module):
                 ),
             ]
         )
-        self.conv_post = norm_f(
-            nn.Conv2d(int(32 * self.d_mult), 1, (3, 3), padding=(1, 1))
-        )
+        self.conv_post = norm_f(nn.Conv2d(int(32 * self.d_mult), 1, (3, 3), padding=(1, 1)))
 
     def forward(self, x):
         fmap = []
@@ -644,14 +560,10 @@ class MultiResolutionDiscriminator(nn.Module):
     def __init__(self, cfg, debug=False):
         super().__init__()
         self.resolutions = cfg.resolutions
-        assert len(self.resolutions) == 3, (
-            "MRD requires list of list with len=3, each element having a list with len=3. got {}".format(
-                self.resolutions
-            )
+        assert len(self.resolutions) == 3, "MRD requires list of list with len=3, each element having a list with len=3. got {}".format(
+            self.resolutions
         )
-        self.discriminators = nn.ModuleList(
-            [DiscriminatorR(cfg, resolution) for resolution in self.resolutions]
-        )
+        self.discriminators = nn.ModuleList([DiscriminatorR(cfg, resolution) for resolution in self.resolutions])
 
     def forward(self, y, y_hat):
         y_d_rs = []

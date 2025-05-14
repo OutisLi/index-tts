@@ -77,9 +77,7 @@ class TextNormalizer:
         if has_chinese or not has_alpha or is_email:
             return True
 
-        has_pinyin = bool(
-            re.search(TextNormalizer.PINYIN_TONE_PATTERN, s, re.IGNORECASE)
-        )
+        has_pinyin = bool(re.search(TextNormalizer.PINYIN_TONE_PATTERN, s, re.IGNORECASE))
         return has_pinyin
 
     def load(self):
@@ -90,17 +88,13 @@ class TextNormalizer:
         if platform.system() != "Linux":
             from wetext import Normalizer
 
-            self.zh_normalizer = Normalizer(
-                remove_erhua=False, lang="zh", operator="tn"
-            )
+            self.zh_normalizer = Normalizer(remove_erhua=False, lang="zh", operator="tn")
             self.en_normalizer = Normalizer(lang="en", operator="tn")
         else:
             from tn.chinese.normalizer import Normalizer as NormalizerZh
             from tn.english.normalizer import Normalizer as NormalizerEn
 
-            self.zh_normalizer = NormalizerZh(
-                remove_interjections=False, remove_erhua=False, overwrite_cache=False
-            )
+            self.zh_normalizer = NormalizerZh(remove_interjections=False, remove_erhua=False, overwrite_cache=False)
             self.en_normalizer = NormalizerEn(overwrite_cache=False)
 
     def normalize(self, text: str) -> str:
@@ -120,9 +114,7 @@ class TextNormalizer:
             result = self.restore_names(result, original_name_list)
             # 恢复拼音声调
             result = self.restore_pinyin_tones(result, pinyin_list)
-            pattern = re.compile(
-                "|".join(re.escape(p) for p in self.zh_char_rep_map.keys())
-            )
+            pattern = re.compile("|".join(re.escape(p) for p in self.zh_char_rep_map.keys()))
             result = pattern.sub(lambda x: self.zh_char_rep_map[x.group()], result)
         else:
             try:
@@ -130,9 +122,7 @@ class TextNormalizer:
             except Exception:
                 result = text
                 print(traceback.format_exc())
-            pattern = re.compile(
-                "|".join(re.escape(p) for p in self.char_rep_map.keys())
-            )
+            pattern = re.compile("|".join(re.escape(p) for p in self.char_rep_map.keys()))
             result = pattern.sub(lambda x: self.char_rep_map[x.group()], result)
         return result
 
@@ -189,9 +179,7 @@ class TextNormalizer:
         例如：xuan4 -> <pinyin_a>
         """
         # 声母韵母+声调数字
-        origin_pinyin_pattern = re.compile(
-            TextNormalizer.PINYIN_TONE_PATTERN, re.IGNORECASE
-        )
+        origin_pinyin_pattern = re.compile(TextNormalizer.PINYIN_TONE_PATTERN, re.IGNORECASE)
         original_pinyin_list = re.findall(origin_pinyin_pattern, original_text)
         if len(original_pinyin_list) == 0:
             return (original_text, None)
@@ -314,18 +302,14 @@ class TextTokenizer:
         if len(text) == 0:
             return []
         if len(text.strip()) == 1:
-            return self.sp_model.Encode(
-                text, out_type=kwargs.pop("out_type", int), **kwargs
-            )
+            return self.sp_model.Encode(text, out_type=kwargs.pop("out_type", int), **kwargs)
         # 预处理
         if self.normalizer:
             text = self.normalizer.normalize(text)
         if len(self.pre_tokenizers) > 0:
             for pre_tokenizer in self.pre_tokenizers:
                 text = pre_tokenizer(text)
-        return self.sp_model.Encode(
-            text, out_type=kwargs.pop("out_type", int), **kwargs
-        )
+        return self.sp_model.Encode(text, out_type=kwargs.pop("out_type", int), **kwargs)
 
     def batch_encode(self, texts: List[str], **kwargs):
         # 预处理
@@ -334,22 +318,16 @@ class TextTokenizer:
         if len(self.pre_tokenizers) > 0:
             for pre_tokenizer in self.pre_tokenizers:
                 texts = [pre_tokenizer(text) for text in texts]
-        return self.sp_model.Encode(
-            texts, out_type=kwargs.pop("out_type", int), **kwargs
-        )
+        return self.sp_model.Encode(texts, out_type=kwargs.pop("out_type", int), **kwargs)
 
     def decode(self, ids: Union[List[int], int], do_lower_case=False, **kwargs):
         if isinstance(ids, int):
             ids = [ids]
-        decoded = self.sp_model.Decode(
-            ids, out_type=kwargs.pop("out_type", str), **kwargs
-        )
+        decoded = self.sp_model.Decode(ids, out_type=kwargs.pop("out_type", str), **kwargs)
         return de_tokenized_by_CJK_char(decoded, do_lower_case=do_lower_case)
 
     @staticmethod
-    def split_sentences_by_token(
-        tokenized_str: List[str], split_tokens: List[str], max_tokens_per_sentence: int
-    ) -> List[List[str]]:
+    def split_sentences_by_token(tokenized_str: List[str], split_tokens: List[str], max_tokens_per_sentence: int) -> List[List[str]]:
         """
         将tokenize后的结果按特定token进一步分割
         """
@@ -428,9 +406,7 @@ class TextTokenizer:
         "▁...",  # ellipsis
     ]
 
-    def split_sentences(
-        self, tokenized: List[str], max_tokens_per_sentence=120
-    ) -> List[List[str]]:
+    def split_sentences(self, tokenized: List[str], max_tokens_per_sentence=120) -> List[List[str]]:
         return TextTokenizer.split_sentences_by_token(
             tokenized,
             self.punctuation_marks_tokens,

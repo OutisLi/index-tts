@@ -43,9 +43,9 @@ class Attend(nn.Module):
         self.register_buffer("mask", None, persistent=False)
 
         self.use_flash = use_flash
-        assert not (
-            use_flash and version.parse(torch.__version__) < version.parse("2.0.0")
-        ), "in order to use flash attention, you must be using pytorch 2.0 or above"
+        assert not (use_flash and version.parse(torch.__version__) < version.parse("2.0.0")), (
+            "in order to use flash attention, you must be using pytorch 2.0 or above"
+        )
 
         # determine efficient attention configs for cuda and cpu
         self.config = namedtuple(
@@ -61,14 +61,10 @@ class Attend(nn.Module):
         device_properties = torch.cuda.get_device_properties(torch.device("cuda"))
 
         if device_properties.major == 8 and device_properties.minor == 0:
-            print_once(
-                "A100 GPU detected, using flash attention if input tensor is on cuda"
-            )
+            print_once("A100 GPU detected, using flash attention if input tensor is on cuda")
             self.cuda_config = self.config(True, False, False)
         else:
-            print_once(
-                "Non-A100 GPU detected, using math or mem efficient attention if input tensor is on cuda"
-            )
+            print_once("Non-A100 GPU detected, using math or mem efficient attention if input tensor is on cuda")
             self.cuda_config = self.config(False, True, True)
 
     def get_mask(self, n, device):
@@ -230,9 +226,7 @@ def FeedForward(dim, mult=4, causal_conv=False):
             Rearrange("b d n -> b n d"),
         )
 
-    return Sequential(
-        nn.Linear(dim, dim_inner * 2), GEGLU(), conv, nn.Linear(dim_inner, dim)
-    )
+    return Sequential(nn.Linear(dim, dim_inner * 2), GEGLU(), conv, nn.Linear(dim_inner, dim))
 
 
 class PerceiverResampler(nn.Module):
@@ -250,9 +244,7 @@ class PerceiverResampler(nn.Module):
         super().__init__()
         dim_context = default(dim_context, dim)
 
-        self.proj_context = (
-            nn.Linear(dim_context, dim) if dim_context != dim else nn.Identity()
-        )
+        self.proj_context = nn.Linear(dim_context, dim) if dim_context != dim else nn.Identity()
 
         self.latents = nn.Parameter(torch.randn(num_latents, dim))
         nn.init.normal_(self.latents, std=0.02)
